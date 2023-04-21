@@ -20,7 +20,7 @@ import java.util.Properties;
 
 import org.compiere.model.Query;
 import org.adempiere.core.domains.models.X_AD_ModelValidator;
-import org.spin.eca50.model.validator.Validator;
+import org.spin.eca50.model.validator.Chart;
 import org.spin.util.ISetupDefinition;
 
 /**
@@ -28,7 +28,7 @@ import org.spin.util.ISetupDefinition;
  * Please rename this class and package
  * @author Yamel Senih, ysenih@erpya.com, ERPCyA http://www.erpya.com
  */
-public class Deploy implements ISetupDefinition {
+public class DeployChart implements ISetupDefinition {
 
 	private static final String DESCRIPTION = "(*Created from Setup Automatically*)";
 	private static final String UUID = "(*AutomaticSetup*)";
@@ -52,7 +52,7 @@ public class Deploy implements ISetupDefinition {
 	 */
 	private X_AD_ModelValidator createModelValidator(Properties context, String transactionName) {
 		X_AD_ModelValidator modelValidator = new Query(context, X_AD_ModelValidator.Table_Name, X_AD_ModelValidator.COLUMNNAME_ModelValidationClass + " = ?", transactionName)
-				.setParameters(Validator.class.getName())
+				.setParameters(Chart.class.getName())
 				.setClient_ID()
 				.<X_AD_ModelValidator>first();
 		//	Validate
@@ -66,7 +66,7 @@ public class Deploy implements ISetupDefinition {
 		modelValidator.setEntityType(ENTITY_TYPE);
 		modelValidator.setDescription(DESCRIPTION);
 		modelValidator.setSeqNo(DEFAULT_SEQUENCE);
-		modelValidator.setModelValidationClass(Validator.class.getName());
+		modelValidator.setModelValidationClass(Chart.class.getName());
 		modelValidator.setUUID(UUID);
 		modelValidator.setIsDirectLoad(true);
 		modelValidator.saveEx();

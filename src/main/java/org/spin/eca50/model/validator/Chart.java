@@ -31,10 +31,10 @@ import org.spin.eca50.util.Changes;
  * @author Yamel Senih ysenih@erpya.com
  *
  */
-public class Validator implements ModelValidator {
+public class Chart implements ModelValidator {
 
 	/** Logger */
-	private static CLogger log = CLogger.getCLogger(Validator.class);
+	private static CLogger log = CLogger.getCLogger(Chart.class);
 	/** Client */
 	private int clientId = -1;
 	

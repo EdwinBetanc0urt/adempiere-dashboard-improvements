@@ -68,12 +68,12 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
         	groupId 'io.github.adempiere'
-            artifactId 'adempiere-template-project'
+            artifactId 'adempiere-dashboard-improvements'
             version
            	from components.java
            	pom {
-                name = 'ADempiere Template Project'
-                description = 'Fill it with project description'
+                name = 'ADempiere Dashboard Improvements'
+                description = 'This project allows improve the dashboard use for ADempiere for new UI'
                 url = 'http://adempiere.io/'
                 licenses {
                     license {
@@ -89,9 +89,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:git://github.com/adempiere/adempiere-template-project.git'
-                    developerConnection = 'scm:git:ssh://github.com/adempiere/adempiere-template-project.git'
-                    url = 'http://github.com/adempiere/adempiere-template-project'
+                    connection = 'scm:git:git://github.com/adempiere/adempiere-dashboard-improvements.git'
+                    developerConnection = 'scm:git:ssh://github.com/adempiere/adempiere-dashboard-improvements.git'
+                    url = 'http://github.com/adempiere/adempiere-dashboard-improvements'
                 }
             }
 		}
