@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Migrations>
-  <Migration EntityType="ECA50" Name="Application Dictionary Changes on WindowChart" ReleaseNo="1.0" SeqNo="10260">
+  <Migration EntityType="ECA50" Name="Application Dictionary Changes on WindowChart" ReleaseNo="1.0" SeqNo="10250">
     <Step SeqNo="10" StepType="AD">
       <PO AD_Table_ID="107" Action="U" Record_ID="102681" Table="AD_Field">
         <Data AD_Column_ID="53265" Column="DefaultValue" isOldNull="true">@AD_Window_ID@</Data>
