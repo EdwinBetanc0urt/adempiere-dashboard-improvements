@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MChart;
@@ -175,12 +174,8 @@ public class ChartBuilder {
 				ResultSet rs = null;
 				try {
 					pstmt = DB.prepareStatement(dataSource.getQuery(), null);
-					if(dataSource.getParameters().size() > 0) {
-						AtomicInteger position = new AtomicInteger(1);
-						for(Object parameter : dataSource.getParameters()) {
-							pstmt.setObject(position.getAndIncrement(), parameter);
-						}
-					}
+					DB.setParameters(pstmt, dataSource.getParameters());
+
 					rs = pstmt.executeQuery();
 					while(rs.next()) {
 						String key = rs.getString(2);
