@@ -19,6 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,11 +96,13 @@ public class ChartBuilder {
 		List<Object> parameters = new ArrayList<Object>();
 		StringBuffer sql = new StringBuffer("SELECT " + value + ", " + category  + ", " + series);
 		sql.append(" FROM ").append(fromClause);
-		StringBuffer whereClause = new StringBuffer();
-		if (!Util.isEmpty(where)) {
-			whereClause.append(where);
+
+		// where clause
+		StringBuffer whereClause = new StringBuffer(" WHERE 1=1 ");
+		if (!Util.isEmpty(where, true)) {
+			whereClause.append(" AND (").append(where).append(")");
 		}
-		
+
 		Timestamp currentDate = Env.getContextAsDate(Env.getCtx(), "#Date");
 		Timestamp startDate = null;
 		Timestamp endDate = null;
@@ -114,27 +117,33 @@ public class ChartBuilder {
 		}
 		
 		if (startDate != null && endDate != null) {
-			if(whereClause.length() > 0) {
-				whereClause.append(" AND ");
-			}
-			whereClause.append(category).append(" >= ? ").append("AND ").append(category).append(" <= ? ");
+			whereClause.append(" AND ").append(category).append(" >= ? ")
+				.append("AND ").append(category).append(" <= ? ")
+			;
 			parameters.add(startDate);
 			parameters.add(endDate);
 		}
 		//	Add custom parameters
-		if(customParameters != null && customParameters.size() > 0) {
+		if (customParameters != null && customParameters.size() > 0) {
 			customParameters.entrySet().forEach(parameter -> {
-				if(whereClause.length() > 0) {
-					whereClause.append(" AND ");
+				whereClause.append(" AND ")
+					.append(parameter.getKey())
+				;
+
+				// add value(s)
+				Object currentValue = parameter.getValue();
+				if (currentValue instanceof Collection) {
+					// is multiple values to IN or BETWEEN operators
+					addCollectionParameters(currentValue, parameters);
+				} else {
+					parameters.add(currentValue);
 				}
-				whereClause.append(parameter.getKey());
-				parameters.add(parameter.getValue());
 			});
 		}
+
 		//	Add where clause
-		if(whereClause.length() > 0) {
-			sql.append(" WHERE ").append(whereClause);
-		}
+		sql.append(whereClause);
+
 		MRole role = MRole.getDefault(Env.getCtx(), false);
 		sql = new StringBuffer(role.addAccessSQL(sql.toString(), null, true, false));
 		
@@ -202,7 +211,30 @@ public class ChartBuilder {
 		//	
 		return metrics;
 	}
-	
+
+
+	/**
+	 * When filter value is a collection (List, ArrayList)
+	 * @param objectColelction
+	 * @param parameters
+	 */
+	@SuppressWarnings("unchecked")
+	public static void addCollectionParameters(Object objectColelction, List<Object> parameters) {
+		if (objectColelction instanceof Collection) {
+			try {
+				Collection<Object> collection = (Collection<Object>) objectColelction;
+				// for-each loop
+				for (Object rangeValue : collection) {
+					parameters.add(rangeValue);
+				}
+			}
+			catch (Exception e) {
+				System.out.println(e.getMessage());
+			}
+		}
+	}
+
+
 	public static void main(String[] args) {
 		org.compiere.Adempiere.startup(true);
 		Env.setContext(Env.getCtx(), "#Date", new Timestamp(System.currentTimeMillis()));
