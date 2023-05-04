@@ -45,7 +45,7 @@ signing {
 }
 
 def entityType = 'D'
-version = "1.0.0"
+version = System.getenv("ADEMPIERE_LIBRARY_VERSION")
 
 jar {
     manifest {
