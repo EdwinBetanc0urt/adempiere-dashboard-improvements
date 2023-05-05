@@ -102,8 +102,13 @@ publishing {
 	}
 }
 
+println(version)
+
 signing {
-	def isReleaseVersion = !version.toString().startsWith("local") && !version.toString().endsWith("-SNAPSHOT")
+	def isReleaseVersion = !version.toString().equals("build") && !version.toString().startsWith("local") && !version.toString().endsWith("-SNAPSHOT")
+	def isValues = findProperty("signingKey") && findProperty("signingPassword") &&
+		findProperty("sonatypeUsername") && findProperty("sonatypePassword")
+	println(isValues)
 
 	sign configurations.archives
 
