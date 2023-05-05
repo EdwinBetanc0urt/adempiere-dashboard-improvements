@@ -7,9 +7,23 @@ name: Build With gradle
 on:
   # Triggers the workflow on push or pull request events but only for the develop branch
   push:
-   branches: [ "main", "master", "develop", "bugfix/*", "feature/*" ]
+    branches:
+      - main
+      - master
+      - develop
+      - bugfix/*
+      - test**
+      - feature/*
+      - experimental
   pull_request:
-    branches: [ "main", "master", "develop", "bugfix/*", "feature/*" ]
+    branches:
+      - main
+      - master
+      - develop
+      - bugfix/*
+      - test**
+      - feature/*
+      - experimental
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
