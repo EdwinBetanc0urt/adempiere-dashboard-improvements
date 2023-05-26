@@ -44,7 +44,7 @@ import org.spin.eca50.util.ChartQueryDefinition;
  *
  */
 public class ChartBuilder {
-	
+
 	/**
 	 * Get Data Source Query
 	 * @param chartDatasourceId
@@ -56,9 +56,13 @@ public class ChartBuilder {
 	 */
 	private static ChartQueryDefinition getDataSourceQuery(int chartDatasourceId, boolean isTimeSeries, String timeUnit, int timeScope, Map<String, Object> customParameters) {
 		if(chartDatasourceId <= 0) {
-			throw new AdempiereException("@AD_ChartDatasource_ID@ @NotFound@");
+			throw new AdempiereException("@FillMandatory@ @AD_ChartDatasource_ID@");
 		}
 		MChartDatasource datasource = new MChartDatasource(Env.getCtx(), chartDatasourceId, null);
+		if (datasource == null || datasource.getAD_ChartDatasource_ID() <= 0) {
+			throw new AdempiereException("@AD_ChartDatasource_ID@ @NotFound@");
+		}
+
 		String value = datasource.getValueColumn();
 		String dateColumn = datasource.getDateColumn();
 		String seriesColumn = datasource.getSeriesColumn();
@@ -81,32 +85,25 @@ public class ChartBuilder {
 			}
 			category = " TRUNC(" + dateColumn + ", '" + unit + "') ";
 		}
-		
+
 		String series = DB.TO_STRING(name);
 		boolean hasSeries = false;
 		if (seriesColumn != null) {
 			series = seriesColumn;
 			hasSeries = true;
 		}
-		//	
-		if (!Util.isEmpty(where)) {
-			where = Env.parseContext(Env.getCtx(), 0, where, true);
-		}
-		
+
 		List<Object> parameters = new ArrayList<Object>();
-		StringBuffer sql = new StringBuffer("SELECT " + value + ", " + category  + ", " + series);
+		StringBuffer sql = new StringBuffer("SELECT " + value + ", " + category + ", " + series);
 		sql.append(" FROM ").append(fromClause);
 
 		// where clause
 		StringBuffer whereClause = new StringBuffer(" WHERE 1=1 ");
-		if (!Util.isEmpty(where, true)) {
-			whereClause.append(" AND (").append(where).append(")");
-		}
 
 		Timestamp currentDate = Env.getContextAsDate(Env.getCtx(), "#Date");
 		Timestamp startDate = null;
 		Timestamp endDate = null;
-		
+
 		int scope = timeScope;
 		int offset = datasource.getTimeOffset();
 		
@@ -115,7 +112,7 @@ public class ChartBuilder {
 			startDate = TimeUtil.getDay(TimeUtil.addDuration(currentDate, timeUnit, offset));
 			endDate = TimeUtil.getDay(TimeUtil.addDuration(currentDate, timeUnit, scope));
 		}
-		
+
 		if (startDate != null && endDate != null) {
 			whereClause.append(" AND ").append(category).append(" >= ? ")
 				.append("AND ").append(category).append(" <= ? ")
@@ -145,16 +142,32 @@ public class ChartBuilder {
 		sql.append(whereClause);
 
 		MRole role = MRole.getDefault(Env.getCtx(), false);
-		sql = new StringBuffer(role.addAccessSQL(sql.toString(), null, true, false));
-		
+		String sqlWithAccess = role.addAccessSQL(
+			sql.toString(),
+			null,
+			MRole.SQL_FULLYQUALIFIED,
+			MRole.SQL_RO
+		);
+
+		if (!Util.isEmpty(where, true)) {
+			String parsedWhere = Env.parseContext(Env.getCtx(), 0, where, true);
+			if (parsedWhere.trim().startsWith("WHERE")) {
+				int startIndex = "WHERE".length();
+				parsedWhere = parsedWhere.trim().substring(startIndex);
+			}
+			sqlWithAccess += " AND (" + parsedWhere.trim() + ")";
+		}
+
+		sql = new StringBuffer(sqlWithAccess);
+
 		if (hasSeries) {
-			sql.append(" GROUP BY " + series + ", " + category + " ORDER BY " + series + ", "  + category);
+			sql.append(" GROUP BY " + series + ", " + category + " ORDER BY " + series + ", " + category);
 		} else {
 			sql.append(" GROUP BY " + category + " ORDER BY " + category);
 		}
 		return new ChartQueryDefinition(name, sql.toString(), parameters);
 	}
-	
+
 	/**
 	 * Get Chart data
 	 * This method allows run all data sources and get data
@@ -173,10 +186,15 @@ public class ChartBuilder {
 			.setParameters(chart.getAD_Chart_ID())
 			.setOnlyActiveRecords(true)
 			.getIDsAsList().forEach(chartDataSourceId -> {
-				dataSources.add(getDataSourceQuery(chartId, chart.isTimeSeries(), chart.getTimeUnit(), chart.getTimeScope(), customParameters)); 
+				ChartQueryDefinition queryDefinition = getDataSourceQuery(
+					chartDataSourceId,
+					chart.isTimeSeries(), chart.getTimeUnit(), chart.getTimeScope(),
+					customParameters
+				);
+				dataSources.add(queryDefinition);
 			});
 		//	Run queries
-		if(dataSources.size() > 0) {
+		if (dataSources.size() > 0) {
 			dataSources.forEach(dataSource -> {
 				ChartSeriesValue series = new ChartSeriesValue(dataSource.getName());
 				PreparedStatement pstmt = null;
@@ -203,9 +221,9 @@ public class ChartBuilder {
 					throw new AdempiereException(e);
 				} finally {
 					DB.close(rs, pstmt);
-					rs = null; pstmt = null;
+					rs = null;
+					pstmt = null;
 				}
-				
 			});
 		}
 		//	

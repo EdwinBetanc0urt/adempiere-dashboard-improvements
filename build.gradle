@@ -45,10 +45,11 @@ java {
 
 
 def entityType = 'D'
-def version = System.getenv("ADEMPIERE_LIBRARY_VERSION") ?: "local-1.0.0"
+group = "io.github.adempiere"
+version = System.getenv("ADEMPIERE_LIBRARY_VERSION") ?: "local-1.0.0"
 
 jar {
-    manifest {
+	manifest {
 		attributes(
 			"Implementation-Title": "ADempiere Dashboard Improvements",
 			"Implementation-Version": version,
@@ -71,9 +72,9 @@ publishing {
     }
     publications {
         mavenJava(MavenPublication) {
-        	groupId 'io.github.adempiere'
-            artifactId 'adempiere-dashboard-improvements'
-            version
+			groupId = group
+			artifactId = 'adempiere-dashboard-improvements'
+			version = version
            	from components.java
            	pom {
                 name = 'ADempiere Dashboard Improvements'
@@ -101,6 +102,12 @@ publishing {
 		}
 	}
 }
+
+
+task cleanBuildPublishLocal(type: GradleBuild) {
+	tasks = ['clean', 'build', 'publishToMavenLocal']
+}
+
 
 signing {
 	def isReleaseVersion = !version.toString().startsWith("local") && !version.toString().endsWith("-SNAPSHOT")
