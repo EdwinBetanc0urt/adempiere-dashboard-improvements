@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Migrations>
-  <Migration EntityType="ECA50" Name="Dashboard Examples" ReleaseNo="" SeqNo="10240">
+  <Migration EntityType="ECA50" Name="Dashboard Examples" ReleaseNo="1.0" SeqNo="10240">
     <Step SeqNo="10" StepType="AD">
       <PO AD_Table_ID="53058" Action="I" Record_ID="50373" Table="AD_Rule">
         <Data AD_Column_ID="54241" Column="AD_Client_ID">0</Data>
