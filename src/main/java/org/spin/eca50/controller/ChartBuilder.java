@@ -15,6 +15,7 @@
  *************************************************************************************/
 package org.spin.eca50.controller;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -194,9 +195,9 @@ public class ChartBuilder {
 				dataSources.add(queryDefinition);
 			});
 		//	Run queries
-		if (dataSources.size() > 0) {
+		if (dataSources != null && dataSources.size() > 0) {
+			Map<String, List<Map<String, BigDecimal>>> seriesMap = new HashMap<String, List<Map<String, BigDecimal>>>();
 			dataSources.forEach(dataSource -> {
-				ChartSeriesValue series = new ChartSeriesValue(dataSource.getName());
 				PreparedStatement pstmt = null;
 				ResultSet rs = null;
 				try {
@@ -207,16 +208,22 @@ public class ChartBuilder {
 					while(rs.next()) {
 						String key = rs.getString(2);
 						String seriesName = rs.getString(3);
-						if (seriesName != null) {
-							series.setName(seriesName);
-						}
 						if(chart.isTimeSeries()) {
 							//	TODO: Define it with dates
 						}
-						ChartDataValue data = new ChartDataValue(key, rs.getBigDecimal(1));
-						series.addData(data);
+						BigDecimal amount = rs.getBigDecimal(1);
+
+						// series values
+						List<Map<String, BigDecimal>> valuesList = new ArrayList<Map<String, BigDecimal>>();
+						if (seriesMap.containsKey(seriesName)) {
+							valuesList = seriesMap.get(seriesName);
+						}
+						HashMap<String, BigDecimal> valuesMap = new HashMap<String, BigDecimal>();
+						valuesMap.put(key, amount);
+						valuesList.add(valuesMap);
+
+						seriesMap.put(seriesName, valuesList);
 					}
-					metrics.addSerie(series);
 				} catch (Exception e) {
 					throw new AdempiereException(e);
 				} finally {
@@ -224,6 +231,21 @@ public class ChartBuilder {
 					rs = null;
 					pstmt = null;
 				}
+			});
+
+			seriesMap.entrySet().stream().forEach(seriesEntry -> {
+				ChartSeriesValue chartSerie = new ChartSeriesValue(seriesEntry.getKey());
+				// each values list
+				seriesEntry.getValue().stream().forEach(serie -> {
+					serie.entrySet().stream().forEach(value -> {
+						String name = value.getKey();
+						BigDecimal amount = value.getValue();
+						ChartDataValue data = new ChartDataValue(name, amount);
+						// fill series with value data
+						chartSerie.addData(data);
+					});
+				});
+				metrics.addSerie(chartSerie);
 			});
 		}
 		//	
@@ -263,4 +285,5 @@ public class ChartBuilder {
 		ChartValue data = getChartData(1000000, customParameters);
 		System.out.println(data);
 	}
+
 }
